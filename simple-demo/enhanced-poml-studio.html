@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced POML Studio - Self-Learning Platform</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        .header h1 {
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .header .subtitle {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            margin-left: 2rem;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+        
+        .status-bar {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .status-item {
+            text-align: center;
+            flex: 1;
+        }
+        
+        .status-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .status-label {
+            font-size: 0.8rem;
+            color: #7f8c8d;
+            text-transform: uppercase;
+        }
+        
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 0.5rem;
+        }
+        
+        .card-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .card-badge {
+            background: #3498db;
+            color: white;
+            padding: 0.2rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 500;
+        }
+        
+        .learning-progress {
+            margin: 1rem 0;
+        }
+        
+        .progress-bar {
+            background: #ecf0f1;
+            border-radius: 10px;
+            height: 8px;
+            overflow: hidden;
+            margin: 0.5rem 0;
+        }
+        
+        .progress-fill {
+            background: linear-gradient(90deg, #3498db, #2ecc71);
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+        
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .metric-item {
+            text-align: center;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .metric-value {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .metric-label {
+            font-size: 0.8rem;
+            color: #7f8c8d;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 0.7rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            margin: 0.25rem;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+        
+        .log-container {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 1rem;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            max-height: 300px;
+            overflow-y: auto;
+            margin: 1rem 0;
+        }
+        
+        .log-entry {
+            margin: 0.2rem 0;
+            padding: 0.2rem;
+            border-radius: 3px;
+        }
+        
+        .log-info {
+            color: #3498db;
+        }
+        
+        .log-success {
+            color: #2ecc71;
+        }
+        
+        .log-warning {
+            color: #f39c12;
+        }
+        
+        .log-error {
+            color: #e74c3c;
+        }
+        
+        .template-editor {
+            width: 100%;
+            height: 200px;
+            padding: 1rem;
+            border: 1px solid #bdc3c7;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            resize: vertical;
+        }
+        
+        .optimization-chart {
+            width: 100%;
+            height: 200px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #7f8c8d;
+            font-style: italic;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+        }
+        
+        .status-active {
+            background: #2ecc71;
+            animation: pulse 2s infinite;
+        }
+        
+        .status-pending {
+            background: #f39c12;
+        }
+        
+        .status-error {
+            background: #e74c3c;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .feature-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+            padding: 0.2rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            margin-left: 0.5rem;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+        
+        @keyframes glow {
+            from { box-shadow: 0 0 5px rgba(231, 76, 60, 0.5); }
+            to { box-shadow: 0 0 20px rgba(231, 76, 60, 0.8); }
+        }
+        
+        .tabs {
+            display: flex;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 12px 12px 0 0;
+            overflow: hidden;
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            transition: all 0.3s ease;
+        }
+        
+        .tab.active {
+            background: #3498db;
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 1.5rem;
+            border-radius: 0 0 12px 12px;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>
+            🧠 Enhanced POML Studio
+            <span class="feature-badge">SELF-LEARNING</span>
+        </h1>
+        <div class="subtitle">
+            Prompt Orchestration with AutoMedPrompt, Kaggle Integration & Progressive Deployment
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Status Overview -->
+        <div class="status-bar">
+            <div class="status-item">
+                <div class="status-value" id="activeTemplates">8</div>
+                <div class="status-label">Active Templates</div>
+            </div>
+            <div class="status-item">
+                <div class="status-value" id="learningJobs">3</div>
+                <div class="status-label">Learning Jobs</div>
+            </div>
+            <div class="status-item">
+                <div class="status-value" id="optimizationRuns">12</div>
+                <div class="status-label">Optimizations</div>
+            </div>
+            <div class="status-item">
+                <div class="status-value" id="deployments">5</div>
+                <div class="status-label">Deployments</div>
+            </div>
+            <div class="status-item">
+                <div class="status-value" id="kaggleDatasets">47</div>
+                <div class="status-label">Kaggle Datasets</div>
+            </div>
+        </div>
+
+        <!-- Main Dashboard Grid -->
+        <div class="dashboard-grid">
+            <!-- POML Template Management -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">POML Template Management</div>
+                    <div class="card-badge">V2.0</div>
+                </div>
+                
+                <div class="tabs">
+                    <button class="tab active" onclick="switchTab('template-create')">Create</button>
+                    <button class="tab" onclick="switchTab('template-list')">Templates</button>
+                    <button class="tab" onclick="switchTab('template-optimize')">Optimize</button>
+                </div>
+                
+                <div id="template-create" class="tab-content active">
+                    <textarea class="template-editor" placeholder="Enter POML template...">
+<prompt version="2.0" type="medical_analysis">
+  <system>
+    You are a clinical specialist with expertise in {{medical_domain}}.
+    Use evidence-based medical knowledge for accurate analysis.
+  </system>
+  
+  <context>
+    {{patient_context}}
+  </context>
+  
+  <task>
+    Analyze the provided medical data and provide:
+    1. Clinical assessment
+    2. Differential diagnosis
+    3. Recommended actions
+    4. Risk stratification
+  </task>
+  
+  <constraints>
+    - Follow medical guidelines and best practices
+    - Consider patient safety as top priority
+    - Provide confidence levels for assessments
+  </constraints>
+  
+  <output format="json">
+    {
+      "clinical_assessment": "",
+      "differential_diagnosis": [],
+      "recommendations": [],
+      "risk_level": "",
+      "confidence": 0.95
+    }
+  </output>
+</prompt></textarea>
+                    <div style="margin-top: 1rem;">
+                        <button class="btn btn-success" onclick="createTemplate()">Create Template</button>
+                        <button class="btn" onclick="validateTemplate()">Validate POML</button>
+                        <button class="btn" onclick="previewTemplate()">Preview</button>
+                    </div>
+                </div>
+                
+                <div id="template-list" class="tab-content">
+                    <div id="templatesList"></div>
+                </div>
+                
+                <div id="template-optimize" class="tab-content">
+                    <h4>AutoMedPrompt Optimization</h4>
+                    <div class="metric-grid">
+                        <div class="metric-item">
+                            <div class="metric-value">94.2%</div>
+                            <div class="metric-label">Best Accuracy</div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-value">847ms</div>
+                            <div class="metric-label">Avg Latency</div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-value">15</div>
+                            <div class="metric-label">Iterations</div>
+                        </div>
+                    </div>
+                    <button class="btn btn-warning" onclick="startOptimization()">Start Optimization</button>
+                </div>
+            </div>
+
+            <!-- Self-Learning Pipeline -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <span class="status-indicator status-active"></span>
+                        Self-Learning Pipeline
+                    </div>
+                    <div class="card-badge">KAGGLE</div>
+                </div>
+                
+                <div class="learning-progress">
+                    <h4>Current Learning Job: Cardiology Agent</h4>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 68%"></div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: #7f8c8d;">
+                        <span>68% Complete</span>
+                        <span>Est. 12 min remaining</span>
+                    </div>
+                </div>
+                
+                <div class="metric-grid">
+                    <div class="metric-item">
+                        <div class="metric-value">3,247</div>
+                        <div class="metric-label">Training Cases</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value">91.7%</div>
+                        <div class="metric-label">Accuracy</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value">+12.3%</div>
+                        <div class="metric-label">Improvement</div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 1rem;">
+                    <button class="btn btn-success" onclick="startLearningJob()">Start Learning Job</button>
+                    <button class="btn" onclick="viewDatasets()">View Datasets</button>
+                </div>
+            </div>
+
+            <!-- Optimization Engine -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">AutoMedPrompt Engine</div>
+                    <div class="card-badge">AI-POWERED</div>
+                </div>
+                
+                <div class="tabs">
+                    <button class="tab active" onclick="switchTab('opt-automedprompt')">AutoMedPrompt</button>
+                    <button class="tab" onclick="switchTab('opt-genetic')">Genetic</button>
+                    <button class="tab" onclick="switchTab('opt-rl')">Reinforcement</button>
+                </div>
+                
+                <div id="opt-automedprompt" class="tab-content active">
+                    <div class="optimization-chart">
+                        📈 Optimization Progress Chart
+                        <br><small>Real-time performance tracking</small>
+                    </div>
+                    <div class="metric-grid">
+                        <div class="metric-item">
+                            <div class="metric-value">5</div>
+                            <div class="metric-label">Strategies</div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-value">23</div>
+                            <div class="metric-label">Variants</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="opt-genetic" class="tab-content">
+                    <h4>Genetic Algorithm Optimization</h4>
+                    <div class="metric-grid">
+                        <div class="metric-item">
+                            <div class="metric-value">50</div>
+                            <div class="metric-label">Population</div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-value">12</div>
+                            <div class="metric-label">Generations</div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-value">0.15</div>
+                            <div class="metric-label">Mutation Rate</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="opt-rl" class="tab-content">
+                    <h4>Reinforcement Learning</h4>
+                    <div class="metric-grid">
+                        <div class="metric-item">
+                            <div class="metric-value">847</div>
+                            <div class="metric-label">Episodes</div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-value">0.23</div>
+                            <div class="metric-label">Epsilon</div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-value">0.92</div>
+                            <div class="metric-label">Best Reward</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progressive Deployment -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">Progressive Deployment</div>
+                    <div class="card-badge">A/B TEST</div>
+                </div>
+                
+                <div class="tabs">
+                    <button class="tab active" onclick="switchTab('deploy-canary')">Canary</button>
+                    <button class="tab" onclick="switchTab('deploy-ab')">A/B Test</button>
+                    <button class="tab" onclick="switchTab('deploy-rollback')">Rollback</button>
+                </div>
+                
+                <div id="deploy-canary" class="tab-content active">
+                    <h4>Canary Deployment: Clinical Agent v2.1</h4>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 25%"></div>
+                    </div>
+                    <div style="margin: 0.5rem 0; font-size: 0.9rem;">
+                        Traffic: 25% → 50% → 75% → 100%
+                    </div>
+                    <div class="metric-grid">
+                        <div class="metric-item">
+                            <div class="metric-value">99.2%</div>
+                            <div class="metric-label">Success Rate</div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-value">523ms</div>
+                            <div class="metric-label">Latency</div>
+                        </div>
+                    </div>
+                    <button class="btn btn-success" onclick="continueDeployment()">Continue Rollout</button>
+                    <button class="btn btn-danger" onclick="rollbackDeployment()">Rollback</button>
+                </div>
+                
+                <div id="deploy-ab" class="tab-content">
+                    <h4>A/B Test: Medication Agent</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div style="text-align: center;">
+                            <h5>Template A (Control)</h5>
+                            <div class="metric-value">87.3%</div>
+                            <div class="metric-label">Accuracy</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <h5>Template B (Variant)</h5>
+                            <div class="metric-value">91.7%</div>
+                            <div class="metric-label">Accuracy</div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 1rem; font-size: 0.9rem; color: #2ecc71;">
+                        ✓ Statistical significance achieved (p < 0.05)
+                    </div>
+                </div>
+                
+                <div id="deploy-rollback" class="tab-content">
+                    <h4>Rollback Events</h4>
+                    <div style="font-size: 0.9rem;">
+                        <div style="margin: 0.5rem 0;">
+                            <span class="status-indicator status-error"></span>
+                            2024-01-15 14:23 - Auto rollback (latency spike)
+                        </div>
+                        <div style="margin: 0.5rem 0;">
+                            <span class="status-indicator status-pending"></span>
+                            2024-01-14 09:17 - Manual rollback
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Activity Log -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">System Activity Log</div>
+                <button class="btn" onclick="clearLog()">Clear Log</button>
+            </div>
+            <div class="log-container" id="activityLog">
+                <div class="log-entry log-success">[2024-01-16 10:45:23] ✓ Learning job completed for cardiology agent (accuracy: 94.2%)</div>
+                <div class="log-entry log-info">[2024-01-16 10:44:15] → AutoMedPrompt optimization started for template_clinical_v2</div>
+                <div class="log-entry log-success">[2024-01-16 10:43:07] ✓ Kaggle dataset downloaded: stroke-prediction-dataset</div>
+                <div class="log-entry log-warning">[2024-01-16 10:42:33] ⚠ Deployment health check warning: latency increased</div>
+                <div class="log-entry log-info">[2024-01-16 10:41:22] → Canary deployment progress: 25% traffic allocated</div>
+                <div class="log-entry log-success">[2024-01-16 10:40:15] ✓ POML template validated and created</div>
+                <div class="log-entry log-info">[2024-01-16 10:39:08] → Genetic algorithm optimization generation 15/20</div>
+                <div class="log-entry log-success">[2024-01-16 10:38:45] ✓ A/B test statistical significance reached</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab switching functionality
+        function switchTab(tabId) {
+            // Hide all tab contents in the same parent
+            const parent = event.target.closest('.card');
+            const tabContents = parent.querySelectorAll('.tab-content');
+            const tabs = parent.querySelectorAll('.tab');
+            
+            tabContents.forEach(content => content.classList.remove('active'));
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            document.getElementById(tabId).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // Simulated API calls and interactions
+        function createTemplate() {
+            addLogEntry('info', 'Creating POML template...');
+            setTimeout(() => {
+                addLogEntry('success', 'POML template created successfully');
+                updateCounter('activeTemplates', 1);
+            }, 1500);
+        }
+
+        function validateTemplate() {
+            addLogEntry('info', 'Validating POML syntax...');
+            setTimeout(() => {
+                addLogEntry('success', 'POML template validation passed');
+            }, 800);
+        }
+
+        function startOptimization() {
+            addLogEntry('info', 'Starting AutoMedPrompt optimization...');
+            setTimeout(() => {
+                addLogEntry('success', 'Optimization job queued');
+                updateCounter('optimizationRuns', 1);
+            }, 1000);
+        }
+
+        function startLearningJob() {
+            addLogEntry('info', 'Initializing learning pipeline...');
+            setTimeout(() => {
+                addLogEntry('success', 'Learning job started with Kaggle datasets');
+                updateCounter('learningJobs', 1);
+            }, 2000);
+        }
+
+        function continueDeployment() {
+            addLogEntry('info', 'Continuing canary deployment...');
+            setTimeout(() => {
+                addLogEntry('success', 'Deployment progressed to 50% traffic');
+            }, 1500);
+        }
+
+        function rollbackDeployment() {
+            addLogEntry('warning', 'Initiating deployment rollback...');
+            setTimeout(() => {
+                addLogEntry('success', 'Rollback completed successfully');
+            }, 2000);
+        }
+
+        function addLogEntry(type, message) {
+            const log = document.getElementById('activityLog');
+            const timestamp = new Date().toLocaleString();
+            const icons = {
+                info: '→',
+                success: '✓',
+                warning: '⚠',
+                error: '✗'
+            };
+            
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            entry.textContent = `[${timestamp}] ${icons[type]} ${message}`;
+            
+            log.insertBefore(entry, log.firstChild);
+            
+            // Keep only last 20 entries
+            while (log.children.length > 20) {
+                log.removeChild(log.lastChild);
+            }
+        }
+
+        function updateCounter(elementId, increment) {
+            const element = document.getElementById(elementId);
+            const currentValue = parseInt(element.textContent);
+            element.textContent = currentValue + increment;
+        }
+
+        function clearLog() {
+            document.getElementById('activityLog').innerHTML = '';
+            addLogEntry('info', 'Activity log cleared');
+        }
+
+        // Simulate real-time updates
+        function simulateRealTimeUpdates() {
+            const events = [
+                { type: 'info', message: 'Processing learning batch (batch 47/120)' },
+                { type: 'success', message: 'Template optimization convergence achieved' },
+                { type: 'info', message: 'Health check passed for all deployed templates' },
+                { type: 'warning', message: 'Kaggle API rate limit approaching' },
+                { type: 'success', message: 'New variant generated with 2.3% improvement' }
+            ];
+            
+            setInterval(() => {
+                const event = events[Math.floor(Math.random() * events.length)];
+                addLogEntry(event.type, event.message);
+            }, 15000); // Add entry every 15 seconds
+        }
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            addLogEntry('success', 'Enhanced POML Studio initialized');
+            addLogEntry('info', 'Connected to self-learning pipeline');
+            addLogEntry('info', 'Monitoring 8 active templates');
+            
+            // Start real-time simulation
+            simulateRealTimeUpdates();
+            
+            // Load templates list
+            loadTemplatesList();
+        });
+
+        function loadTemplatesList() {
+            const templatesList = document.getElementById('templatesList');
+            const templates = [
+                { id: 'clinical_v2', name: 'Clinical Analysis Agent', status: 'deployed', accuracy: '94.2%' },
+                { id: 'medication_v1', name: 'Medication Safety Agent', status: 'testing', accuracy: '91.7%' },
+                { id: 'lab_results_v3', name: 'Lab Results Interpreter', status: 'optimizing', accuracy: '89.3%' },
+                { id: 'billing_v2', name: 'Medical Billing Agent', status: 'deployed', accuracy: '96.8%' }
+            ];
+            
+            templatesList.innerHTML = templates.map(template => `
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem; border-bottom: 1px solid #ecf0f1;">
+                    <div>
+                        <strong>${template.name}</strong>
+                        <br><small style="color: #7f8c8d;">${template.id}</small>
+                    </div>
+                    <div style="text-align: right;">
+                        <div class="metric-value" style="font-size: 1rem;">${template.accuracy}</div>
+                        <div class="status-indicator status-${template.status === 'deployed' ? 'active' : 'pending'}"></div>
+                        ${template.status}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function viewDatasets() {
+            addLogEntry('info', 'Loading available Kaggle healthcare datasets...');
+            setTimeout(() => {
+                addLogEntry('success', 'Found 47 relevant datasets across 5 medical domains');
+            }, 1200);
+        }
+
+        function previewTemplate() {
+            addLogEntry('info', 'Generating template preview...');
+            setTimeout(() => {
+                addLogEntry('success', 'Template preview generated with sample variables');
+            }, 800);
+        }
+    </script>
+</body>
+</html>

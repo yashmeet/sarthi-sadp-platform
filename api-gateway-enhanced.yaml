@@ -1,0 +1,608 @@
+swagger: '2.0'
+info:
+  title: Sarthi AI Agent Development Platform API - Enhanced
+  description: |
+    Comprehensive API for the Sarthi AI Agent Development Platform (SADP) with 
+    POML orchestration, self-learning pipeline, and advanced deployment capabilities.
+  version: '2.0.0'
+  contact:
+    name: SADP API Support
+    email: support@sarthi.ai
+
+host: sadp-gateway-4jhmplb8.uc.gateway.dev
+basePath: /api/v2
+
+schemes:
+  - https
+
+consumes:
+  - application/json
+
+produces:
+  - application/json
+
+securityDefinitions:
+  api_key:
+    type: apiKey
+    name: X-API-Key
+    in: header
+    description: API key for service access
+
+security:
+  - api_key: []
+
+paths:
+  # Health and Status
+  /health:
+    get:
+      summary: Enhanced health check
+      description: Check API Gateway and all services health status
+      operationId: healthCheck
+      security:
+        - api_key: []
+      responses:
+        200:
+          description: Service is healthy
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: healthy
+              services:
+                type: object
+              timestamp:
+                type: string
+                format: date-time
+
+  # POML Orchestration Service
+  /poml/templates:
+    get:
+      summary: List POML templates
+      description: List all POML templates with filtering
+      operationId: listPOMLTemplates
+      security:
+        - api_key: []
+      x-google-backend:
+        address: https://sadp-poml-orchestrator-xonau6hybq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - name: agent_type
+          in: query
+          type: string
+          description: Filter by agent type
+        - name: medical_domain
+          in: query
+          type: string
+          description: Filter by medical domain
+        - name: status
+          in: query
+          type: string
+          description: Filter by template status
+      responses:
+        200:
+          description: List of POML templates
+          schema:
+            type: object
+
+    post:
+      summary: Create POML template
+      description: Create a new POML template
+      operationId: createPOMLTemplate
+      security:
+        - api_key: []
+      x-google-backend:
+        address: https://sadp-poml-orchestrator-xonau6hybq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - name: template
+          in: body
+          required: true
+          schema:
+            type: object
+      responses:
+        201:
+          description: Template created
+          schema:
+            type: object
+
+  /poml/templates/{template_id}:
+    get:
+      summary: Get POML template
+      description: Get a specific POML template
+      operationId: getPOMLTemplate
+      security:
+        - api_key: []
+      x-google-backend:
+        address: https://sadp-poml-orchestrator-xonau6hybq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - name: template_id
+          in: path
+          required: true
+          type: string
+      responses:
+        200:
+          description: POML template details
+          schema:
+            type: object
+
+  /poml/templates/{template_id}/execute:
+    post:
+      summary: Execute POML template
+      description: Execute a POML template with variables
+      operationId: executePOMLTemplate
+      security:
+        - api_key: []
+      x-google-backend:
+        address: https://sadp-poml-orchestrator-xonau6hybq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - name: template_id
+          in: path
+          required: true
+          type: string
+        - name: execution_request
+          in: body
+          required: true
+          schema:
+            type: object
+      responses:
+        200:
+          description: Execution result
+          schema:
+            type: object
+
+  /poml/templates/{template_id}/optimize:
+    post:
+      summary: Optimize POML template
+      description: Start optimization process for a template
+      operationId: optimizePOMLTemplate
+      security:
+        - api_key: []
+      x-google-backend:
+        address: https://sadp-poml-orchestrator-xonau6hybq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - name: template_id
+          in: path
+          required: true
+          type: string
+        - name: optimization_request
+          in: body
+          required: true
+          schema:
+            type: object
+      responses:
+        200:
+          description: Optimization started
+          schema:
+            type: object
+
+  # Learning Pipeline Service
+  /learning/start:
+    post:
+      summary: Start learning job
+      description: Start a continuous learning job with Kaggle datasets
+      operationId: startLearningJob
+      security:
+        - api_key: []
+      x-google-backend:
+        address: https://sadp-learning-pipeline-355881591332.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - name: learning_request
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              agent_type:
+                type: string
+              medical_domain:
+                type: string
+              prompt_template_id:
+                type: string
+              optimization_objective:
+                type: string
+              max_iterations:
+                type: integer
+      responses:
+        200:
+          description: Learning job started
+          schema:
+            type: object
+
+  /learning/jobs:
+    get:
+      summary: List learning jobs
+      description: List all learning jobs with optional filtering
+      operationId: listLearningJobs
+      security:
+        - api_key: []
+      x-google-backend:
+        address: https://sadp-learning-pipeline-355881591332.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - name: status
+          in: query
+          type: string
+          description: Filter by job status
+      responses:
+        200:
+          description: List of learning jobs
+          schema:
+            type: object
+
+  /learning/jobs/{job_id}:
+    get:
+      summary: Get learning job
+      description: Get details of a specific learning job
+      operationId: getLearningJob
+      security:
+        - api_key: []
+      x-google-backend:
+        address: https://sadp-learning-pipeline-355881591332.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - name: job_id
+          in: path
+          required: true
+          type: string
+      responses:
+        200:
+          description: Learning job details
+          schema:
+            type: object
+
+  # Kaggle Integration Service
+  /datasets/available:
+    get:
+      summary: Get available datasets
+      description: Get available healthcare datasets from Kaggle
+      operationId: getAvailableDatasets
+      security:
+        - api_key: []
+      x-google-backend:
+        address: https://sadp-kaggle-integration-355881591332.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - name: medical_domain
+          in: query
+          type: string
+          description: Filter by medical domain
+      responses:
+        200:
+          description: Available datasets
+          schema:
+            type: object
+
+  /datasets/download:
+    post:
+      summary: Download dataset
+      description: Download a dataset from Kaggle
+      operationId: downloadDataset
+      security:
+        - api_key: []
+      x-google-backend:
+        address: https://sadp-kaggle-integration-355881591332.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - name: download_request
+          in: body
+          required: true
+          schema:
+            type: object
+      responses:
+        200:
+          description: Download started
+          schema:
+            type: object
+
+  # Enhanced Prompt Optimization Service
+  /optimize/automedprompt:
+    post:
+      summary: AutoMedPrompt optimization
+      description: Run enhanced AutoMedPrompt optimization
+      operationId: optimizeAutoMedPrompt
+      security:
+        - api_key: []
+      x-google-backend:
+        address: https://sadp-prompt-optimization-355881591332.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - name: optimization_request
+          in: body
+          required: true
+          schema:
+            type: object
+      responses:
+        200:
+          description: Optimization result
+          schema:
+            type: object
+
+  /optimize/jobs:
+    get:
+      summary: List optimization jobs
+      description: List all optimization jobs
+      operationId: listOptimizationJobs
+      security:
+        - api_key: []
+      x-google-backend:
+        address: https://sadp-prompt-optimization-355881591332.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - name: status
+          in: query
+          type: string
+        - name: strategy
+          in: query
+          type: string
+      responses:
+        200:
+          description: List of optimization jobs
+          schema:
+            type: object
+
+  /optimize/variants/{template_id}:
+    post:
+      summary: Generate prompt variants
+      description: Generate prompt variants for testing
+      operationId: generatePromptVariants
+      security:
+        - api_key: []
+      x-google-backend:
+        address: https://sadp-prompt-optimization-355881591332.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - name: template_id
+          in: path
+          required: true
+          type: string
+        - name: count
+          in: query
+          type: integer
+          default: 5
+      responses:
+        200:
+          description: Generated variants
+          schema:
+            type: object
+
+  # Deployment Manager Service
+  /deployments:
+    get:
+      summary: List deployments
+      description: List all template deployments
+      operationId: listDeployments
+      security:
+        - api_key: []
+      x-google-backend:
+        address: https://sadp-deployment-manager-355881591332.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - name: status
+          in: query
+          type: string
+        - name: template_id
+          in: query
+          type: string
+      responses:
+        200:
+          description: List of deployments
+          schema:
+            type: object
+
+    post:
+      summary: Create deployment
+      description: Create a new progressive deployment
+      operationId: createDeployment
+      security:
+        - api_key: []
+      x-google-backend:
+        address: https://sadp-deployment-manager-355881591332.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - name: deployment_request
+          in: body
+          required: true
+          schema:
+            type: object
+      responses:
+        200:
+          description: Deployment created
+          schema:
+            type: object
+
+  /deployments/{deployment_id}:
+    get:
+      summary: Get deployment
+      description: Get deployment details
+      operationId: getDeployment
+      security:
+        - api_key: []
+      x-google-backend:
+        address: https://sadp-deployment-manager-355881591332.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - name: deployment_id
+          in: path
+          required: true
+          type: string
+      responses:
+        200:
+          description: Deployment details
+          schema:
+            type: object
+
+  /deployments/{deployment_id}/rollback:
+    post:
+      summary: Rollback deployment
+      description: Trigger deployment rollback
+      operationId: rollbackDeployment
+      security:
+        - api_key: []
+      x-google-backend:
+        address: https://sadp-deployment-manager-355881591332.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - name: deployment_id
+          in: path
+          required: true
+          type: string
+        - name: reason
+          in: query
+          type: string
+          default: "Manual rollback"
+      responses:
+        200:
+          description: Rollback triggered
+          schema:
+            type: object
+
+  /ab-tests:
+    get:
+      summary: List A/B tests
+      description: List all A/B tests
+      operationId: listABTests
+      security:
+        - api_key: []
+      x-google-backend:
+        address: https://sadp-deployment-manager-355881591332.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      responses:
+        200:
+          description: List of A/B tests
+          schema:
+            type: object
+
+    post:
+      summary: Create A/B test
+      description: Create a new A/B test
+      operationId: createABTest
+      security:
+        - api_key: []
+      x-google-backend:
+        address: https://sadp-deployment-manager-355881591332.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - name: ab_test_request
+          in: body
+          required: true
+          schema:
+            type: object
+      responses:
+        200:
+          description: A/B test created
+          schema:
+            type: object
+
+  /ab-tests/{experiment_id}:
+    get:
+      summary: Get A/B test
+      description: Get A/B test details and results
+      operationId: getABTest
+      security:
+        - api_key: []
+      x-google-backend:
+        address: https://sadp-deployment-manager-355881591332.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - name: experiment_id
+          in: path
+          required: true
+          type: string
+      responses:
+        200:
+          description: A/B test details
+          schema:
+            type: object
+
+  # Legacy Agent Runtime Service (maintained for compatibility)
+  /agents/execute:
+    post:
+      summary: Execute an agent (legacy)
+      description: Execute an AI agent with provided input (legacy endpoint)
+      operationId: executeAgentLegacy
+      security:
+        - api_key: []
+      x-google-backend:
+        address: https://sadp-agent-runtime-xonau6hybq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - name: execution_request
+          in: body
+          required: true
+          schema:
+            type: object
+      responses:
+        200:
+          description: Agent execution result
+          schema:
+            type: object
+
+  # Monitoring Service (existing)
+  /metrics:
+    get:
+      summary: Get metrics
+      description: Get performance metrics
+      operationId: getMetrics
+      security:
+        - api_key: []
+      x-google-backend:
+        address: https://sadp-monitoring-xonau6hybq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - name: metric_names
+          in: query
+          type: array
+          items:
+            type: string
+      responses:
+        200:
+          description: Metrics data
+          schema:
+            type: object
+
+# Enhanced rate limiting and quotas
+x-google-management:
+  metrics:
+    - name: requests
+      display_name: Requests
+      value_type: INT64
+      metric_kind: DELTA
+    - name: learning_jobs
+      display_name: Learning Jobs
+      value_type: INT64
+      metric_kind: DELTA
+    - name: optimizations
+      display_name: Optimizations
+      value_type: INT64
+      metric_kind: DELTA
+    - name: deployments
+      display_name: Deployments
+      value_type: INT64
+      metric_kind: DELTA
+  quota:
+    limits:
+      - name: requests-per-minute-per-project
+        metric: requests
+        unit: "1/min/{project}"
+        values:
+          STANDARD: 2000
+      - name: learning-jobs-per-minute-per-project
+        metric: learning_jobs
+        unit: "1/min/{project}"
+        values:
+          STANDARD: 10
+      - name: optimizations-per-minute-per-project
+        metric: optimizations
+        unit: "1/min/{project}"
+        values:
+          STANDARD: 20
+      - name: deployments-per-minute-per-project
+        metric: deployments
+        unit: "1/min/{project}"
+        values:
+          STANDARD: 5

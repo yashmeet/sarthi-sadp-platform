@@ -1,0 +1,286 @@
+swagger: '2.0'
+info:
+  title: Sarthi AI Agent Development Platform API
+  description: |
+    Comprehensive API for the Sarthi AI Agent Development Platform (SADP).
+    Provides endpoints for agent execution, evaluation, development, and monitoring.
+  version: '1.0.0'
+  contact:
+    name: SADP API Support
+    email: support@sarthi.ai
+
+host: sadp-gateway-4jhmplb8.uc.gateway.dev
+basePath: /api/v1
+
+schemes:
+  - https
+
+consumes:
+  - application/json
+
+produces:
+  - application/json
+
+securityDefinitions:
+  api_key:
+    type: apiKey
+    name: X-API-Key
+    in: header
+    description: API key for service access
+
+security:
+  - api_key: []
+
+paths:
+  # Health and Status
+  /health:
+    get:
+      summary: Health check
+      description: Check API Gateway health status
+      operationId: healthCheck
+      security: []
+      responses:
+        200:
+          description: Service is healthy
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: healthy
+              timestamp:
+                type: string
+                format: date-time
+
+  # Agent Runtime Service
+  /agents/execute:
+    post:
+      summary: Execute an agent
+      description: Execute an AI agent with provided input
+      operationId: executeAgent
+      security:
+        - api_key: []
+      x-google-backend:
+        address: https://sadp-agent-runtime-xonau6hybq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - name: execution_request
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              agent_id:
+                type: string
+              input_data:
+                type: object
+      responses:
+        200:
+          description: Agent execution result
+          schema:
+            type: object
+
+  /agents/{agent_id}/status:
+    get:
+      summary: Get agent status
+      description: Get the current status of an agent
+      operationId: getAgentStatus
+      security:
+        - api_key: []
+      x-google-backend:
+        address: https://sadp-agent-runtime-xonau6hybq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - name: agent_id
+          in: path
+          required: true
+          type: string
+      responses:
+        200:
+          description: Agent status
+          schema:
+            type: object
+
+  # Evaluation Service
+  /evaluate:
+    post:
+      summary: Start agent evaluation
+      description: Start evaluation of an agent with test cases
+      operationId: startEvaluation
+      security:
+        - api_key: []
+      x-google-backend:
+        address: https://evaluation-service-xonau6hybq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - name: evaluation_request
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              agent_id:
+                type: string
+              test_cases:
+                type: array
+                items:
+                  type: object
+      responses:
+        200:
+          description: Evaluation result
+          schema:
+            type: object
+
+  /evaluations/{evaluation_id}:
+    get:
+      summary: Get evaluation result
+      description: Get the result of a specific evaluation
+      operationId: getEvaluationResult
+      security:
+        - api_key: []
+      x-google-backend:
+        address: https://evaluation-service-xonau6hybq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - name: evaluation_id
+          in: path
+          required: true
+          type: string
+      responses:
+        200:
+          description: Evaluation result
+          schema:
+            type: object
+
+  # Development Service
+  /templates:
+    get:
+      summary: List agent templates
+      description: List available agent templates
+      operationId: listTemplates
+      security:
+        - api_key: []
+      x-google-backend:
+        address: https://development-service-xonau6hybq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - name: category
+          in: query
+          type: string
+          description: Filter by template category
+      responses:
+        200:
+          description: List of templates
+          schema:
+            type: array
+            items:
+              type: object
+
+    post:
+      summary: Create agent template
+      description: Create a new agent template
+      operationId: createTemplate
+      security:
+        - api_key: []
+      x-google-backend:
+        address: https://development-service-xonau6hybq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - name: template
+          in: body
+          required: true
+          schema:
+            type: object
+      responses:
+        201:
+          description: Template created
+          schema:
+            type: object
+
+  /agents/build:
+    post:
+      summary: Build agent
+      description: Build an agent from definition
+      operationId: buildAgent
+      security:
+        - api_key: []
+      x-google-backend:
+        address: https://development-service-xonau6hybq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - name: agent_definition
+          in: body
+          required: true
+          schema:
+            type: object
+      responses:
+        200:
+          description: Build started
+          schema:
+            type: object
+
+  # Monitoring Service
+  /metrics:
+    get:
+      summary: Get metrics
+      description: Get performance metrics
+      operationId: getMetrics
+      security:
+        - api_key: []
+      x-google-backend:
+        address: https://monitoring-service-xonau6hybq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - name: metric_names
+          in: query
+          type: array
+          items:
+            type: string
+          description: Specific metrics to retrieve
+      responses:
+        200:
+          description: Metrics data
+          schema:
+            type: object
+
+  /alerts:
+    get:
+      summary: List alerts
+      description: Get current alerts
+      operationId: listAlerts
+      security:
+        - api_key: []
+      x-google-backend:
+        address: https://monitoring-service-xonau6hybq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - name: status
+          in: query
+          type: string
+          enum: [active, resolved, acknowledged]
+        - name: severity
+          in: query
+          type: string
+          enum: [low, medium, high, critical]
+      responses:
+        200:
+          description: List of alerts
+          schema:
+            type: array
+            items:
+              type: object
+
+# Rate limiting and quotas
+x-google-management:
+  metrics:
+    - name: requests
+      display_name: Requests
+      value_type: INT64
+      metric_kind: DELTA
+  quota:
+    limits:
+      - name: requests-per-minute-per-project
+        metric: requests
+        unit: "1/min/{project}"
+        values:
+          STANDARD: 1000

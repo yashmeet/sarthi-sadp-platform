@@ -1,0 +1,30 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements
+COPY requirements_production.txt .
+RUN pip install --no-cache-dir -r requirements_production.txt
+
+# Copy common services
+COPY ../common/src/ ./common/
+
+# Copy source code
+COPY src/ ./
+
+# Set environment variables
+ENV PORT=8080
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONPATH=/app
+
+# Expose port
+EXPOSE 8080
+
+# Start the production service
+CMD ["uvicorn", "main_production:app", "--host", "0.0.0.0", "--port", "8080"]

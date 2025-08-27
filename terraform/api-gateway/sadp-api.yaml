@@ -1,0 +1,577 @@
+swagger: '2.0'
+info:
+  title: Sarthi AI Agent Development Platform API
+  description: |
+    Comprehensive API for the Sarthi AI Agent Development Platform (SADP).
+    Provides endpoints for agent execution, evaluation, development, and monitoring.
+  version: '1.0.0'
+  contact:
+    name: SADP API Support
+    email: support@sarthi.ai
+  license:
+    name: Proprietary
+    url: https://sarthi.ai/license
+
+host: ${PROJECT_ID}.uc.gateway.dev
+basePath: /api/v1
+
+schemes:
+  - https
+
+consumes:
+  - application/json
+
+produces:
+  - application/json
+
+securityDefinitions:
+  jwt_auth:
+    type: apiKey
+    name: Authorization
+    in: header
+    description: JWT token for authentication (Bearer <token>)
+  
+  api_key:
+    type: apiKey
+    name: X-API-Key
+    in: header
+    description: API key for service-to-service authentication
+
+security:
+  - jwt_auth: []
+  - api_key: []
+
+paths:
+  # Health and Status
+  /health:
+    get:
+      summary: Health check
+      description: Check API Gateway health status
+      operationId: healthCheck
+      security: []
+      responses:
+        200:
+          description: Service is healthy
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: healthy
+              timestamp:
+                type: string
+                format: date-time
+
+  # Agent Runtime Service
+  /agents/execute:
+    post:
+      summary: Execute an agent
+      description: Execute an AI agent with provided input
+      operationId: executeAgent
+      x-google-backend:
+        address: https://agent-runtime-service.sadp.svc.cluster.local
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - name: execution_request
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/AgentExecutionRequest'
+      responses:
+        200:
+          description: Agent execution result
+          schema:
+            $ref: '#/definitions/AgentExecutionResult'
+        400:
+          description: Bad request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        401:
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        429:
+          description: Rate limit exceeded
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        500:
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+
+  /agents/{agent_id}/status:
+    get:
+      summary: Get agent status
+      description: Get the current status of an agent
+      operationId: getAgentStatus
+      x-google-backend:
+        address: https://agent-runtime-service.sadp.svc.cluster.local
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - name: agent_id
+          in: path
+          required: true
+          type: string
+      responses:
+        200:
+          description: Agent status
+          schema:
+            $ref: '#/definitions/AgentStatus'
+        404:
+          description: Agent not found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+
+  # Evaluation Service
+  /evaluations:
+    post:
+      summary: Start agent evaluation
+      description: Start evaluation of an agent with test cases
+      operationId: startEvaluation
+      x-google-backend:
+        address: https://evaluation-service.sadp.svc.cluster.local
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - name: evaluation_request
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/EvaluationRequest'
+      responses:
+        200:
+          description: Evaluation started
+          schema:
+            $ref: '#/definitions/EvaluationResult'
+        400:
+          description: Bad request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+
+  /evaluations/{evaluation_id}:
+    get:
+      summary: Get evaluation result
+      description: Get the result of a specific evaluation
+      operationId: getEvaluationResult
+      x-google-backend:
+        address: https://evaluation-service.sadp.svc.cluster.local
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - name: evaluation_id
+          in: path
+          required: true
+          type: string
+      responses:
+        200:
+          description: Evaluation result
+          schema:
+            $ref: '#/definitions/EvaluationResult'
+        404:
+          description: Evaluation not found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+
+  # Development Service
+  /templates:
+    get:
+      summary: List agent templates
+      description: List available agent templates
+      operationId: listTemplates
+      x-google-backend:
+        address: https://development-service.sadp.svc.cluster.local
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - name: category
+          in: query
+          type: string
+          description: Filter by template category
+      responses:
+        200:
+          description: List of templates
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/AgentTemplate'
+
+    post:
+      summary: Create agent template
+      description: Create a new agent template
+      operationId: createTemplate
+      x-google-backend:
+        address: https://development-service.sadp.svc.cluster.local
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - name: template
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/AgentTemplate'
+      responses:
+        201:
+          description: Template created
+          schema:
+            $ref: '#/definitions/AgentTemplate'
+        400:
+          description: Bad request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+
+  /agents/build:
+    post:
+      summary: Build agent
+      description: Build an agent from definition
+      operationId: buildAgent
+      x-google-backend:
+        address: https://development-service.sadp.svc.cluster.local
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - name: agent_definition
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/AgentDefinition'
+      responses:
+        200:
+          description: Build started
+          schema:
+            $ref: '#/definitions/BuildResult'
+        400:
+          description: Bad request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+
+  # Monitoring Service
+  /metrics:
+    get:
+      summary: Get metrics
+      description: Get performance metrics
+      operationId: getMetrics
+      x-google-backend:
+        address: https://monitoring-service.sadp.svc.cluster.local
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - name: metric_names
+          in: query
+          type: array
+          items:
+            type: string
+          description: Specific metrics to retrieve
+        - name: start_time
+          in: query
+          type: string
+          format: date-time
+          description: Start time for metrics
+        - name: end_time
+          in: query
+          type: string
+          format: date-time
+          description: End time for metrics
+      responses:
+        200:
+          description: Metrics data
+          schema:
+            type: object
+            properties:
+              metrics:
+                type: array
+                items:
+                  $ref: '#/definitions/MetricData'
+
+  /alerts:
+    get:
+      summary: List alerts
+      description: Get current alerts
+      operationId: listAlerts
+      x-google-backend:
+        address: https://monitoring-service.sadp.svc.cluster.local
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - name: status
+          in: query
+          type: string
+          enum: [active, resolved, acknowledged]
+        - name: severity
+          in: query
+          type: string
+          enum: [low, medium, high, critical]
+      responses:
+        200:
+          description: List of alerts
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Alert'
+
+# Data Models
+definitions:
+  AgentExecutionRequest:
+    type: object
+    required:
+      - agent_id
+      - input_data
+    properties:
+      agent_id:
+        type: string
+        description: ID of the agent to execute
+      input_data:
+        type: object
+        description: Input data for the agent
+      parameters:
+        type: object
+        description: Execution parameters
+      metadata:
+        type: object
+        description: Additional metadata
+
+  AgentExecutionResult:
+    type: object
+    properties:
+      execution_id:
+        type: string
+        description: Unique execution ID
+      agent_id:
+        type: string
+        description: ID of the executed agent
+      output:
+        type: object
+        description: Agent output
+      confidence:
+        type: number
+        format: float
+        description: Confidence score (0-1)
+      execution_time_ms:
+        type: integer
+        description: Execution time in milliseconds
+      timestamp:
+        type: string
+        format: date-time
+        description: Execution timestamp
+
+  AgentStatus:
+    type: object
+    properties:
+      agent_id:
+        type: string
+      status:
+        type: string
+        enum: [active, inactive, error, maintenance]
+      version:
+        type: string
+      health_score:
+        type: number
+        format: float
+      last_execution:
+        type: string
+        format: date-time
+
+  EvaluationRequest:
+    type: object
+    required:
+      - agent_id
+      - test_cases
+    properties:
+      agent_id:
+        type: string
+      test_cases:
+        type: array
+        items:
+          $ref: '#/definitions/TestCase'
+      config:
+        $ref: '#/definitions/EvaluationConfig'
+
+  EvaluationResult:
+    type: object
+    properties:
+      evaluation_id:
+        type: string
+      agent_id:
+        type: string
+      overall_accuracy:
+        type: number
+        format: float
+      test_results:
+        type: array
+        items:
+          $ref: '#/definitions/TestCaseResult'
+      evaluation_duration_ms:
+        type: integer
+      timestamp:
+        type: string
+        format: date-time
+
+  TestCase:
+    type: object
+    required:
+      - case_id
+      - input_data
+      - expected_output
+    properties:
+      case_id:
+        type: string
+      input_data:
+        type: object
+      expected_output:
+        type: object
+      category:
+        type: string
+      difficulty:
+        type: string
+        enum: [easy, medium, hard, expert]
+
+  TestCaseResult:
+    type: object
+    properties:
+      case_id:
+        type: string
+      passed:
+        type: boolean
+      confidence_score:
+        type: number
+        format: float
+      execution_time_ms:
+        type: integer
+      error_message:
+        type: string
+
+  EvaluationConfig:
+    type: object
+    properties:
+      validation_mode:
+        type: string
+        enum: [exact, semantic, custom, fuzzy]
+      similarity_threshold:
+        type: number
+        format: float
+      timeout_ms:
+        type: integer
+
+  AgentTemplate:
+    type: object
+    required:
+      - name
+      - description
+      - template_data
+    properties:
+      template_id:
+        type: string
+      name:
+        type: string
+      description:
+        type: string
+      category:
+        type: string
+      version:
+        type: string
+      template_data:
+        type: object
+      created_at:
+        type: string
+        format: date-time
+
+  AgentDefinition:
+    type: object
+    required:
+      - name
+      - template_id
+    properties:
+      name:
+        type: string
+      description:
+        type: string
+      template_id:
+        type: string
+      configuration:
+        type: object
+      parameters:
+        type: object
+
+  BuildResult:
+    type: object
+    properties:
+      build_id:
+        type: string
+      agent_id:
+        type: string
+      success:
+        type: boolean
+      build_duration_ms:
+        type: integer
+      artifacts:
+        type: array
+        items:
+          type: string
+      error_message:
+        type: string
+      timestamp:
+        type: string
+        format: date-time
+
+  MetricData:
+    type: object
+    properties:
+      metric_name:
+        type: string
+      value:
+        type: number
+        format: float
+      timestamp:
+        type: string
+        format: date-time
+      labels:
+        type: object
+        additionalProperties:
+          type: string
+
+  Alert:
+    type: object
+    properties:
+      alert_id:
+        type: string
+      severity:
+        type: string
+        enum: [low, medium, high, critical]
+      message:
+        type: string
+      status:
+        type: string
+        enum: [active, resolved, acknowledged]
+      triggered_at:
+        type: string
+        format: date-time
+
+  ErrorResponse:
+    type: object
+    properties:
+      error:
+        type: string
+        description: Error message
+      code:
+        type: string
+        description: Error code
+      details:
+        type: object
+        description: Additional error details
+      timestamp:
+        type: string
+        format: date-time
+
+# Rate limiting and quotas
+x-google-management:
+  metrics:
+    - name: requests
+      display_name: Requests
+      value_type: INT64
+      metric_kind: DELTA
+  quota:
+    limits:
+      - name: requests-per-minute-per-user
+        metric: requests
+        unit: "1/min/{user}"
+        values:
+          STANDARD: 100
+          PREMIUM: 1000
+      - name: requests-per-day-per-user
+        metric: requests
+        unit: "1/d/{user}"
+        values:
+          STANDARD: 10000
+          PREMIUM: 100000

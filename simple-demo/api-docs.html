@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SADP API Documentation - Healthcare AI Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+    <style>
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .method-get { background-color: #10b981; }
+        .method-post { background-color: #3b82f6; }
+        .method-put { background-color: #f59e0b; }
+        .method-delete { background-color: #ef4444; }
+        .endpoint-card { transition: all 0.3s ease; }
+        .endpoint-card:hover { transform: translateX(5px); }
+    </style>
+</head>
+<body class="bg-gray-50">
+    
+    <!-- Header -->
+    <header class="gradient-bg text-white py-8">
+        <div class="container mx-auto px-6">
+            <h1 class="text-4xl font-bold mb-2">SADP API Documentation</h1>
+            <p class="text-lg opacity-90">RESTful API for Healthcare AI Agent Platform</p>
+            <div class="mt-4 flex space-x-4">
+                <span class="bg-white/20 px-3 py-1 rounded text-sm">Version: 1.0.0</span>
+                <span class="bg-white/20 px-3 py-1 rounded text-sm">Base URL: https://sadp-agent-runtime-355881591332.us-central1.run.app</span>
+                <span class="bg-white/20 px-3 py-1 rounded text-sm">Format: JSON</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Quick Start -->
+    <section class="py-8 bg-white border-b">
+        <div class="container mx-auto px-6">
+            <h2 class="text-2xl font-bold mb-4">🚀 Quick Start</h2>
+            <div class="grid md:grid-cols-2 gap-6">
+                <div>
+                    <h3 class="font-semibold mb-2">1. Test the API</h3>
+                    <pre><code class="language-bash"># Check if API is running
+curl https://sadp-agent-runtime-355881591332.us-central1.run.app/health
+
+# Get list of available agents
+curl https://sadp-agent-runtime-355881591332.us-central1.run.app/agents/supported</code></pre>
+                </div>
+                <div>
+                    <h3 class="font-semibold mb-2">2. Execute an Agent</h3>
+                    <pre><code class="language-bash"># Execute clinical agent
+curl -X POST https://sadp-agent-runtime-355881591332.us-central1.run.app/agents/clinical/execute \
+  -H "Content-Type: application/json" \
+  -d '{"data": {"input": "Patient data here"}}'</code></pre>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Authentication -->
+    <section class="py-8 bg-gray-50">
+        <div class="container mx-auto px-6">
+            <h2 class="text-2xl font-bold mb-4">🔐 Authentication</h2>
+            <div class="bg-white rounded-lg p-6">
+                <div class="mb-4">
+                    <span class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded text-sm">Currently: No Authentication Required (Demo Mode)</span>
+                </div>
+                <h3 class="font-semibold mb-2">Production Authentication (Coming Soon)</h3>
+                <p class="text-gray-700 mb-4">In production, the API will use JWT Bearer tokens:</p>
+                <pre><code class="language-bash">curl -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  https://api.sadp.health/agents/clinical/execute</code></pre>
+                <div class="mt-4 p-4 bg-blue-50 rounded">
+                    <p class="text-sm"><strong>Note:</strong> For integration testing, request a demo API key by contacting support@sarthi.health</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Core Endpoints -->
+    <section class="py-8 bg-white">
+        <div class="container mx-auto px-6">
+            <h2 class="text-2xl font-bold mb-6">📍 Core Endpoints</h2>
+            
+            <!-- Health Check -->
+            <div class="endpoint-card bg-gray-50 rounded-lg p-6 mb-4">
+                <div class="flex items-center mb-4">
+                    <span class="method-get text-white px-3 py-1 rounded text-sm font-bold mr-3">GET</span>
+                    <code class="text-lg font-mono">/health</code>
+                    <span class="ml-auto text-sm text-gray-600">No auth required</span>
+                </div>
+                <p class="text-gray-700 mb-4">Check API health status and uptime</p>
+                
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                        <h4 class="font-semibold text-sm mb-2">Response Example</h4>
+                        <pre><code class="language-json">{
+  "status": "healthy",
+  "service": "agent-runtime",
+  "version": "1.0.0",
+  "timestamp": "2024-01-20T14:30:00Z",
+  "environment": "production",
+  "uptime": "72h 15m 32s"
+}</code></pre>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-sm mb-2">Response Codes</h4>
+                        <ul class="text-sm space-y-1">
+                            <li><span class="text-green-600 font-mono">200</span> - Service is healthy</li>
+                            <li><span class="text-yellow-600 font-mono">503</span> - Service degraded</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- List Agents -->
+            <div class="endpoint-card bg-gray-50 rounded-lg p-6 mb-4">
+                <div class="flex items-center mb-4">
+                    <span class="method-get text-white px-3 py-1 rounded text-sm font-bold mr-3">GET</span>
+                    <code class="text-lg font-mono">/agents/supported</code>
+                </div>
+                <p class="text-gray-700 mb-4">Get list of all available AI agents and their capabilities</p>
+                
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                        <h4 class="font-semibold text-sm mb-2">Response Example</h4>
+                        <pre><code class="language-json">{
+  "agents": [
+    "document_processor",
+    "clinical",
+    "billing",
+    "voice",
+    "health_assistant",
+    "medication_entry",
+    "referral_processor",
+    "lab_result_entry"
+  ],
+  "count": 8,
+  "descriptions": {
+    "document_processor": "OCR, handwriting recognition",
+    "clinical": "Treatment plan generation",
+    ...
+  }
+}</code></pre>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-sm mb-2">Use Cases</h4>
+                        <ul class="text-sm space-y-1">
+                            <li>• Dynamically populate agent selection UI</li>
+                            <li>• Check agent availability before execution</li>
+                            <li>• Display agent capabilities to users</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Execute Agent -->
+            <div class="endpoint-card bg-gray-50 rounded-lg p-6 mb-4">
+                <div class="flex items-center mb-4">
+                    <span class="method-post text-white px-3 py-1 rounded text-sm font-bold mr-3">POST</span>
+                    <code class="text-lg font-mono">/agents/{agent_type}/execute</code>
+                    <span class="ml-auto bg-green-100 text-green-800 px-2 py-1 rounded text-xs">Most Important</span>
+                </div>
+                <p class="text-gray-700 mb-4">Execute a specific AI agent with input data</p>
+                
+                <div class="mb-4">
+                    <h4 class="font-semibold text-sm mb-2">Path Parameters</h4>
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th class="text-left p-2">Parameter</th>
+                                <th class="text-left p-2">Type</th>
+                                <th class="text-left p-2">Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="border-b">
+                                <td class="p-2 font-mono">agent_type</td>
+                                <td class="p-2">string</td>
+                                <td class="p-2">Type of agent (e.g., "clinical", "billing")</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                        <h4 class="font-semibold text-sm mb-2">Request Body</h4>
+                        <pre><code class="language-json">{
+  "request_id": "req_123456",  // Optional
+  "data": {
+    "input": "Patient: John Doe, Age: 45...",
+    "format": "text",  // text, json, hl7
+    "context": {
+      "user_id": "usr_789",
+      "session_id": "sess_456",
+      "facility": "General Hospital"
+    }
+  },
+  "metadata": {
+    "priority": "high",
+    "audit": true,
+    "compliance_check": true
+  },
+  "options": {
+    "timeout": 30000,  // milliseconds
+    "confidence_threshold": 0.85
+  }
+}</code></pre>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-sm mb-2">Response Example</h4>
+                        <pre><code class="language-json">{
+  "request_id": "req_123456",
+  "agent_type": "clinical",
+  "status": "completed",
+  "processing_time": 847,
+  "results": {
+    "processed": true,
+    "confidence": 0.968,
+    "output": {
+      "assessment": "Hypertension detected",
+      "recommendations": [
+        "Monitor BP daily",
+        "Low sodium diet"
+      ],
+      "icd_codes": ["I10"],
+      "risk_level": "medium"
+    }
+  },
+  "audit": {
+    "transaction_id": "tx_789456",
+    "timestamp": "2024-01-20T14:30:00Z",
+    "hipaa_compliant": true
+  }
+}</code></pre>
+                    </div>
+                </div>
+
+                <div class="mt-4 p-4 bg-yellow-50 rounded">
+                    <p class="text-sm"><strong>Rate Limits:</strong> 100 requests/minute per IP in demo mode, 1000 requests/minute with API key</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Marketplace Endpoints -->
+    <section class="py-8 bg-gray-50">
+        <div class="container mx-auto px-6">
+            <h2 class="text-2xl font-bold mb-6">🛍️ Marketplace Endpoints</h2>
+            
+            <!-- Search Agents -->
+            <div class="endpoint-card bg-white rounded-lg p-6 mb-4">
+                <div class="flex items-center mb-4">
+                    <span class="method-get text-white px-3 py-1 rounded text-sm font-bold mr-3">GET</span>
+                    <code class="text-lg font-mono">/agents/marketplace/search</code>
+                </div>
+                <p class="text-gray-700 mb-4">Search for agents in the marketplace</p>
+                
+                <div class="mb-4">
+                    <h4 class="font-semibold text-sm mb-2">Query Parameters</h4>
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th class="text-left p-2">Parameter</th>
+                                <th class="text-left p-2">Type</th>
+                                <th class="text-left p-2">Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="border-b">
+                                <td class="p-2 font-mono">q</td>
+                                <td class="p-2">string</td>
+                                <td class="p-2">Search query</td>
+                            </tr>
+                            <tr class="border-b">
+                                <td class="p-2 font-mono">category</td>
+                                <td class="p-2">string</td>
+                                <td class="p-2">Filter by category</td>
+                            </tr>
+                            <tr class="border-b">
+                                <td class="p-2 font-mono">min_rating</td>
+                                <td class="p-2">float</td>
+                                <td class="p-2">Minimum rating (0-5)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <pre><code class="language-bash"># Example: Search for clinical agents with 4+ rating
+curl "https://sadp-agent-runtime-355881591332.us-central1.run.app/agents/marketplace/search?q=clinical&min_rating=4"</code></pre>
+            </div>
+
+            <!-- Load Agent -->
+            <div class="endpoint-card bg-white rounded-lg p-6 mb-4">
+                <div class="flex items-center mb-4">
+                    <span class="method-post text-white px-3 py-1 rounded text-sm font-bold mr-3">POST</span>
+                    <code class="text-lg font-mono">/agents/marketplace/load</code>
+                </div>
+                <p class="text-gray-700 mb-4">Dynamically load an agent from the marketplace</p>
+                
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                        <h4 class="font-semibold text-sm mb-2">Request Body</h4>
+                        <pre><code class="language-json">{
+  "agent_id": "clinical_specialist_v3",
+  "version": "3.2.1",  // Optional, latest if not specified
+  "license_key": "LIC_789456",  // For premium agents
+  "config": {
+    "auto_update": true,
+    "cache_duration": 3600
+  }
+}</code></pre>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-sm mb-2">Response</h4>
+                        <pre><code class="language-json">{
+  "status": "loaded",
+  "agent_id": "clinical_specialist_v3",
+  "version": "3.2.1",
+  "loaded_at": "2024-01-20T14:30:00Z",
+  "capabilities": [
+    "diagnosis",
+    "treatment_planning",
+    "drug_interaction_check"
+  ],
+  "resource_usage": {
+    "memory": "256MB",
+    "compute": "2 vCPU"
+  }
+}</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- POML Endpoints -->
+    <section class="py-8 bg-white">
+        <div class="container mx-auto px-6">
+            <h2 class="text-2xl font-bold mb-6">🎯 POML (Prompt Orchestration) Endpoints</h2>
+            
+            <!-- Get Templates -->
+            <div class="endpoint-card bg-gray-50 rounded-lg p-6 mb-4">
+                <div class="flex items-center mb-4">
+                    <span class="method-get text-white px-3 py-1 rounded text-sm font-bold mr-3">GET</span>
+                    <code class="text-lg font-mono">/poml/templates</code>
+                </div>
+                <p class="text-gray-700 mb-4">List all available POML templates</p>
+                
+                <pre><code class="language-json">{
+  "templates": [
+    {
+      "id": "clinical_assessment_v2",
+      "name": "Clinical Assessment Template",
+      "version": "2.0.0",
+      "description": "Comprehensive clinical evaluation",
+      "variables": ["patient_data", "medical_history", "symptoms"],
+      "performance": {
+        "accuracy": 0.975,
+        "avg_latency": 820
+      }
+    }
+  ]
+}</code></pre>
+            </div>
+
+            <!-- Create A/B Test -->
+            <div class="endpoint-card bg-gray-50 rounded-lg p-6 mb-4">
+                <div class="flex items-center mb-4">
+                    <span class="method-post text-white px-3 py-1 rounded text-sm font-bold mr-3">POST</span>
+                    <code class="text-lg font-mono">/poml/ab-tests</code>
+                </div>
+                <p class="text-gray-700 mb-4">Create an A/B test for prompt optimization</p>
+                
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                        <h4 class="font-semibold text-sm mb-2">Request</h4>
+                        <pre><code class="language-json">{
+  "name": "Clinical Prompt Optimization",
+  "control_template": "clinical_v2.0",
+  "variant_template": "clinical_v2.1",
+  "traffic_split": {
+    "control": 50,
+    "variant": 50
+  },
+  "success_metrics": [
+    "accuracy",
+    "confidence",
+    "latency"
+  ],
+  "minimum_sample_size": 1000
+}</code></pre>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-sm mb-2">Response</h4>
+                        <pre><code class="language-json">{
+  "test_id": "ab_test_456",
+  "status": "running",
+  "created_at": "2024-01-20T14:30:00Z",
+  "estimated_completion": "2024-01-21T14:30:00Z",
+  "dashboard_url": "/poml/ab-tests/ab_test_456"
+}</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Update Template -->
+            <div class="endpoint-card bg-gray-50 rounded-lg p-6 mb-4">
+                <div class="flex items-center mb-4">
+                    <span class="method-put text-white px-3 py-1 rounded text-sm font-bold mr-3">PUT</span>
+                    <code class="text-lg font-mono">/poml/templates/{template_id}</code>
+                </div>
+                <p class="text-gray-700 mb-4">Update a POML template (creates new version)</p>
+                
+                <pre><code class="language-json">{
+  "template_content": "&lt;prompt version='2.1'&gt;...&lt;/prompt&gt;",
+  "changelog": "Improved diagnostic accuracy for edge cases",
+  "author": "dr.smith@hospital.com",
+  "test_results": {
+    "accuracy": 0.982,
+    "tested_samples": 500
+  }
+}</code></pre>
+            </div>
+        </div>
+    </section>
+
+    <!-- Audit Endpoints -->
+    <section class="py-8 bg-gray-50">
+        <div class="container mx-auto px-6">
+            <h2 class="text-2xl font-bold mb-6">📋 Audit & Compliance Endpoints</h2>
+            
+            <!-- Get Audit Trail -->
+            <div class="endpoint-card bg-white rounded-lg p-6 mb-4">
+                <div class="flex items-center mb-4">
+                    <span class="method-get text-white px-3 py-1 rounded text-sm font-bold mr-3">GET</span>
+                    <code class="text-lg font-mono">/audit/trail</code>
+                    <span class="ml-auto bg-red-100 text-red-800 px-2 py-1 rounded text-xs">Requires Auth</span>
+                </div>
+                <p class="text-gray-700 mb-4">Retrieve audit trail for compliance and monitoring</p>
+                
+                <div class="mb-4">
+                    <h4 class="font-semibold text-sm mb-2">Query Parameters</h4>
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th class="text-left p-2">Parameter</th>
+                                <th class="text-left p-2">Type</th>
+                                <th class="text-left p-2">Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="border-b">
+                                <td class="p-2 font-mono">start_date</td>
+                                <td class="p-2">ISO 8601</td>
+                                <td class="p-2">Start of date range</td>
+                            </tr>
+                            <tr class="border-b">
+                                <td class="p-2 font-mono">end_date</td>
+                                <td class="p-2">ISO 8601</td>
+                                <td class="p-2">End of date range</td>
+                            </tr>
+                            <tr class="border-b">
+                                <td class="p-2 font-mono">agent_type</td>
+                                <td class="p-2">string</td>
+                                <td class="p-2">Filter by agent</td>
+                            </tr>
+                            <tr class="border-b">
+                                <td class="p-2 font-mono">user_id</td>
+                                <td class="p-2">string</td>
+                                <td class="p-2">Filter by user</td>
+                            </tr>
+                            <tr class="border-b">
+                                <td class="p-2 font-mono">compliance_only</td>
+                                <td class="p-2">boolean</td>
+                                <td class="p-2">Only HIPAA-relevant events</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <pre><code class="language-json">{
+  "audit_entries": [
+    {
+      "transaction_id": "tx_20240120_142536_7891",
+      "timestamp": "2024-01-20T14:25:36Z",
+      "agent": "clinical",
+      "user": {
+        "id": "usr_4829",
+        "role": "physician",
+        "facility": "General Hospital"
+      },
+      "action": "patient_data_access",
+      "resource": "patient_10293",
+      "result": "success",
+      "hipaa_relevant": true,
+      "data_accessed": ["demographics", "vitals", "medications"],
+      "processing_time": 847,
+      "confidence": 0.968,
+      "ip_address": "192.168.1.142",
+      "session_id": "sess_9821730984"
+    }
+  ],
+  "total_count": 2847,
+  "page": 1,
+  "page_size": 50
+}</code></pre>
+            </div>
+
+            <!-- Export Audit Report -->
+            <div class="endpoint-card bg-white rounded-lg p-6 mb-4">
+                <div class="flex items-center mb-4">
+                    <span class="method-post text-white px-3 py-1 rounded text-sm font-bold mr-3">POST</span>
+                    <code class="text-lg font-mono">/audit/export</code>
+                </div>
+                <p class="text-gray-700 mb-4">Export audit data for compliance reporting</p>
+                
+                <pre><code class="language-json">{
+  "format": "csv",  // csv, json, pdf
+  "date_range": {
+    "start": "2024-01-01T00:00:00Z",
+    "end": "2024-01-31T23:59:59Z"
+  },
+  "include": [
+    "transactions",
+    "user_actions",
+    "data_access",
+    "errors"
+  ],
+  "compliance_standard": "HIPAA"  // HIPAA, SOC2, ISO27001
+}</code></pre>
+            </div>
+        </div>
+    </section>
+
+    <!-- Metrics Endpoints -->
+    <section class="py-8 bg-white">
+        <div class="container mx-auto px-6">
+            <h2 class="text-2xl font-bold mb-6">📊 Metrics & Monitoring</h2>
+            
+            <div class="endpoint-card bg-gray-50 rounded-lg p-6 mb-4">
+                <div class="flex items-center mb-4">
+                    <span class="method-get text-white px-3 py-1 rounded text-sm font-bold mr-3">GET</span>
+                    <code class="text-lg font-mono">/metrics</code>
+                </div>
+                <p class="text-gray-700 mb-4">Prometheus-compatible metrics endpoint</p>
+                
+                <pre><code class="language-bash"># Prometheus format metrics
+sadp_requests_total{agent="clinical",status="success"} 12847
+sadp_request_duration_seconds{agent="clinical",quantile="0.99"} 1.2
+sadp_active_agents{type="clinical"} 3
+sadp_error_rate{agent="billing"} 0.002
+sadp_audit_events_total{compliance="hipaa"} 98234</code></pre>
+            </div>
+
+            <div class="endpoint-card bg-gray-50 rounded-lg p-6 mb-4">
+                <div class="flex items-center mb-4">
+                    <span class="method-get text-white px-3 py-1 rounded text-sm font-bold mr-3">GET</span>
+                    <code class="text-lg font-mono">/metrics/dashboard</code>
+                </div>
+                <p class="text-gray-700 mb-4">Get dashboard-ready metrics summary</p>
+                
+                <pre><code class="language-json">{
+  "summary": {
+    "total_requests_24h": 48293,
+    "success_rate": 0.998,
+    "avg_latency_ms": 234,
+    "active_users": 127,
+    "agents_deployed": 8
+  },
+  "by_agent": {
+    "clinical": {
+      "requests": 12847,
+      "accuracy": 0.975,
+      "avg_latency": 187
+    }
+  }
+}</code></pre>
+            </div>
+        </div>
+    </section>
+
+    <!-- Webhooks -->
+    <section class="py-8 bg-gray-50">
+        <div class="container mx-auto px-6">
+            <h2 class="text-2xl font-bold mb-6">🔔 Webhooks & Events</h2>
+            
+            <div class="bg-white rounded-lg p-6">
+                <h3 class="font-semibold mb-4">Webhook Events</h3>
+                <p class="text-gray-700 mb-4">Configure webhooks to receive real-time notifications:</p>
+                
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <h4 class="font-semibold text-sm mb-2">Available Events</h4>
+                        <ul class="text-sm space-y-2">
+                            <li><code class="bg-gray-100 px-2 py-1 rounded">agent.execution.completed</code></li>
+                            <li><code class="bg-gray-100 px-2 py-1 rounded">agent.execution.failed</code></li>
+                            <li><code class="bg-gray-100 px-2 py-1 rounded">audit.compliance.violation</code></li>
+                            <li><code class="bg-gray-100 px-2 py-1 rounded">poml.test.completed</code></li>
+                            <li><code class="bg-gray-100 px-2 py-1 rounded">system.error.critical</code></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-sm mb-2">Webhook Payload</h4>
+                        <pre><code class="language-json">{
+  "event": "agent.execution.completed",
+  "timestamp": "2024-01-20T14:30:00Z",
+  "data": {
+    "transaction_id": "tx_123456",
+    "agent": "clinical",
+    "confidence": 0.97,
+    "processing_time": 234
+  }
+}</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Error Codes -->
+    <section class="py-8 bg-white">
+        <div class="container mx-auto px-6">
+            <h2 class="text-2xl font-bold mb-6">❌ Error Handling</h2>
+            
+            <div class="bg-gray-50 rounded-lg p-6">
+                <h3 class="font-semibold mb-4">Standard Error Response</h3>
+                <pre><code class="language-json">{
+  "error": {
+    "code": "AGENT_NOT_FOUND",
+    "message": "The requested agent 'custom_agent' is not available",
+    "details": {
+      "available_agents": ["clinical", "billing", "document_processor"],
+      "suggestion": "Use /agents/supported to list available agents"
+    },
+    "request_id": "req_123456",
+    "timestamp": "2024-01-20T14:30:00Z"
+  }
+}</code></pre>
+
+                <h3 class="font-semibold mb-4 mt-6">Common Error Codes</h3>
+                <table class="w-full text-sm">
+                    <thead class="bg-gray-100">
+                        <tr>
+                            <th class="text-left p-2">HTTP Status</th>
+                            <th class="text-left p-2">Error Code</th>
+                            <th class="text-left p-2">Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="border-b">
+                            <td class="p-2">400</td>
+                            <td class="p-2 font-mono">INVALID_REQUEST</td>
+                            <td class="p-2">Malformed request body or parameters</td>
+                        </tr>
+                        <tr class="border-b">
+                            <td class="p-2">401</td>
+                            <td class="p-2 font-mono">UNAUTHORIZED</td>
+                            <td class="p-2">Missing or invalid authentication</td>
+                        </tr>
+                        <tr class="border-b">
+                            <td class="p-2">403</td>
+                            <td class="p-2 font-mono">FORBIDDEN</td>
+                            <td class="p-2">Insufficient permissions</td>
+                        </tr>
+                        <tr class="border-b">
+                            <td class="p-2">404</td>
+                            <td class="p-2 font-mono">AGENT_NOT_FOUND</td>
+                            <td class="p-2">Requested agent doesn't exist</td>
+                        </tr>
+                        <tr class="border-b">
+                            <td class="p-2">429</td>
+                            <td class="p-2 font-mono">RATE_LIMIT_EXCEEDED</td>
+                            <td class="p-2">Too many requests</td>
+                        </tr>
+                        <tr class="border-b">
+                            <td class="p-2">500</td>
+                            <td class="p-2 font-mono">INTERNAL_ERROR</td>
+                            <td class="p-2">Server error (will be logged)</td>
+                        </tr>
+                        <tr class="border-b">
+                            <td class="p-2">503</td>
+                            <td class="p-2 font-mono">SERVICE_UNAVAILABLE</td>
+                            <td class="p-2">Temporary service outage</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- SDKs and Libraries -->
+    <section class="py-8 bg-gray-50">
+        <div class="container mx-auto px-6">
+            <h2 class="text-2xl font-bold mb-6">🛠️ SDKs & Integration</h2>
+            
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="bg-white rounded-lg p-6">
+                    <h3 class="font-semibold mb-3">JavaScript/TypeScript</h3>
+                    <pre><code class="language-bash">npm install @sarthi/sadp-sdk</code></pre>
+                    <pre><code class="language-javascript">import { SADPClient } from '@sarthi/sadp-sdk';
+
+const client = new SADPClient({
+  apiKey: 'YOUR_API_KEY'
+});
+
+const result = await client.agents.execute('clinical', {
+  data: { input: 'Patient data...' }
+});</code></pre>
+                </div>
+
+                <div class="bg-white rounded-lg p-6">
+                    <h3 class="font-semibold mb-3">Python</h3>
+                    <pre><code class="language-bash">pip install sarthi-sadp</code></pre>
+                    <pre><code class="language-python">from sarthi_sadp import SADPClient
+
+client = SADPClient(api_key='YOUR_API_KEY')
+
+result = client.agents.execute(
+    agent_type='clinical',
+    data={'input': 'Patient data...'}
+)</code></pre>
+                </div>
+
+                <div class="bg-white rounded-lg p-6">
+                    <h3 class="font-semibold mb-3">Java</h3>
+                    <pre><code class="language-xml">&lt;dependency&gt;
+  &lt;groupId&gt;com.sarthi&lt;/groupId&gt;
+  &lt;artifactId&gt;sadp-sdk&lt;/artifactId&gt;
+  &lt;version&gt;1.0.0&lt;/version&gt;
+&lt;/dependency&gt;</code></pre>
+                    <pre><code class="language-java">SADPClient client = new SADPClient("API_KEY");
+AgentResult result = client.executeAgent(
+    "clinical", patientData);</code></pre>
+                </div>
+            </div>
+
+            <div class="mt-6 bg-blue-50 rounded-lg p-6">
+                <h3 class="font-semibold mb-2">Direct FHIR Integration</h3>
+                <p class="text-sm text-gray-700 mb-3">SADP supports direct FHIR R4 format for healthcare interoperability:</p>
+                <pre><code class="language-json">{
+  "resourceType": "Patient",
+  "id": "example",
+  "name": [{"family": "Doe", "given": ["John"]}],
+  "gender": "male",
+  "birthDate": "1979-01-20"
+}</code></pre>
+            </div>
+        </div>
+    </section>
+
+    <!-- Rate Limits -->
+    <section class="py-8 bg-white">
+        <div class="container mx-auto px-6">
+            <h2 class="text-2xl font-bold mb-6">⚡ Rate Limits & Quotas</h2>
+            
+            <div class="bg-gray-50 rounded-lg p-6">
+                <table class="w-full">
+                    <thead class="bg-gray-100">
+                        <tr>
+                            <th class="text-left p-3">Tier</th>
+                            <th class="text-center p-3">Requests/Min</th>
+                            <th class="text-center p-3">Requests/Day</th>
+                            <th class="text-center p-3">Concurrent</th>
+                            <th class="text-center p-3">Max Payload</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="border-b">
+                            <td class="p-3 font-semibold">Demo (No Auth)</td>
+                            <td class="text-center p-3">100</td>
+                            <td class="text-center p-3">10,000</td>
+                            <td class="text-center p-3">10</td>
+                            <td class="text-center p-3">1 MB</td>
+                        </tr>
+                        <tr class="border-b">
+                            <td class="p-3 font-semibold">Basic</td>
+                            <td class="text-center p-3">1,000</td>
+                            <td class="text-center p-3">100,000</td>
+                            <td class="text-center p-3">50</td>
+                            <td class="text-center p-3">5 MB</td>
+                        </tr>
+                        <tr class="border-b">
+                            <td class="p-3 font-semibold">Professional</td>
+                            <td class="text-center p-3">5,000</td>
+                            <td class="text-center p-3">1,000,000</td>
+                            <td class="text-center p-3">200</td>
+                            <td class="text-center p-3">25 MB</td>
+                        </tr>
+                        <tr>
+                            <td class="p-3 font-semibold">Enterprise</td>
+                            <td class="text-center p-3">Custom</td>
+                            <td class="text-center p-3">Unlimited</td>
+                            <td class="text-center p-3">Custom</td>
+                            <td class="text-center p-3">Custom</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="mt-4 p-4 bg-yellow-50 rounded">
+                    <p class="text-sm"><strong>Rate Limit Headers:</strong> Check response headers for current usage:</p>
+                    <ul class="text-sm mt-2 space-y-1">
+                        <li><code>X-RateLimit-Limit</code> - Requests allowed per window</li>
+                        <li><code>X-RateLimit-Remaining</code> - Requests remaining</li>
+                        <li><code>X-RateLimit-Reset</code> - Window reset time (Unix timestamp)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="gradient-bg text-white py-8">
+        <div class="container mx-auto px-6">
+            <div class="grid md:grid-cols-3 gap-6">
+                <div>
+                    <h3 class="font-semibold mb-2">Quick Links</h3>
+                    <ul class="text-sm space-y-1 opacity-90">
+                        <li><a href="https://sadp-demo-app-355881591332.us-central1.run.app" class="hover:underline">Live Demo</a></li>
+                        <li><a href="#" class="hover:underline">OpenAPI Spec (JSON)</a></li>
+                        <li><a href="#" class="hover:underline">Postman Collection</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="font-semibold mb-2">Support</h3>
+                    <ul class="text-sm space-y-1 opacity-90">
+                        <li>Email: api-support@sarthi.health</li>
+                        <li>Slack: #sadp-api-support</li>
+                        <li>Status: <a href="#" class="hover:underline">status.sadp.health</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="font-semibold mb-2">Legal</h3>
+                    <ul class="text-sm space-y-1 opacity-90">
+                        <li><a href="#" class="hover:underline">Terms of Service</a></li>
+                        <li><a href="#" class="hover:underline">Privacy Policy</a></li>
+                        <li><a href="#" class="hover:underline">HIPAA Compliance</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="mt-6 pt-6 border-t border-white/20 text-center text-sm opacity-75">
+                <p>&copy; 2024 SADP - Sarthi AI Agent Development Platform | API v1.0.0</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,53 @@
+steps:
+# Build the Docker image with full POML CRUD capabilities
+- name: 'gcr.io/cloud-builders/docker'
+  args:
+    - 'build'
+    - '-t'
+    - 'gcr.io/$PROJECT_ID/sadp-agent-runtime:$BUILD_ID'
+    - '-t'
+    - 'gcr.io/$PROJECT_ID/sadp-agent-runtime:latest'
+    - '-f'
+    - 'Dockerfile'
+    - '.'
+
+# Push the Docker image to Container Registry
+- name: 'gcr.io/cloud-builders/docker'
+  args:
+    - 'push'
+    - 'gcr.io/$PROJECT_ID/sadp-agent-runtime:$BUILD_ID'
+
+- name: 'gcr.io/cloud-builders/docker'
+  args:
+    - 'push'
+    - 'gcr.io/$PROJECT_ID/sadp-agent-runtime:latest'
+
+# Deploy to Cloud Run with full CRUD enabled
+- name: 'gcr.io/cloud-builders/gcloud'
+  args:
+    - 'run'
+    - 'deploy'
+    - 'sadp-agent-runtime'
+    - '--image=gcr.io/$PROJECT_ID/sadp-agent-runtime:$BUILD_ID'
+    - '--region=us-central1'
+    - '--platform=managed'
+    - '--allow-unauthenticated'
+    - '--port=8080'
+    - '--memory=2Gi'
+    - '--cpu=2'
+    - '--max-instances=10'
+    - '--min-instances=1'
+    - '--concurrency=100'
+    - '--timeout=300'
+    - '--set-env-vars=NODE_ENV=production,ENVIRONMENT=production,GEMINI_API_KEY=placeholder'
+    - '--set-cloudsql-instances=$PROJECT_ID:us-central1:sarthi-db'
+
+options:
+  machineType: 'E2_HIGHCPU_8'
+  logging: CLOUD_LOGGING_ONLY
+
+timeout: '1200s'
+
+images:
+  - 'gcr.io/$PROJECT_ID/sadp-agent-runtime:$BUILD_ID'
+  - 'gcr.io/$PROJECT_ID/sadp-agent-runtime:latest'

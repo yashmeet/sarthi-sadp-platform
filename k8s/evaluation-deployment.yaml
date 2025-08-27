@@ -1,0 +1,123 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: evaluation-service
+  namespace: sadp
+  labels:
+    app: evaluation-service
+    component: backend
+    version: v1
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: evaluation-service
+  template:
+    metadata:
+      labels:
+        app: evaluation-service
+        component: backend
+        version: v1
+    spec:
+      serviceAccountName: evaluation
+      containers:
+      - name: evaluation-service
+        image: us-central1-docker.pkg.dev/sarthi-patient-experience-hub/sarthi-services/evaluation-service:latest
+        ports:
+        - containerPort: 8000
+          name: http
+        env:
+        - name: GCP_PROJECT_ID
+          value: "sarthi-patient-experience-hub"
+        - name: GCP_REGION
+          value: "us-central1"
+        - name: ENVIRONMENT
+          value: "production"
+        - name: PUBSUB_TOPIC
+          value: "evaluation-topic"
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: database-credentials
+              key: connection-string
+        - name: JWT_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: jwt-secret
+              key: secret-key
+        resources:
+          requests:
+            cpu: 250m
+            memory: 512Mi
+          limits:
+            cpu: 1000m
+            memory: 2Gi
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 1000
+          capabilities:
+            drop:
+            - ALL
+      nodeSelector:
+        workload: general
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: evaluation-service
+  namespace: sadp
+  labels:
+    app: evaluation-service
+spec:
+  type: ClusterIP
+  selector:
+    app: evaluation-service
+  ports:
+  - port: 80
+    targetPort: 8000
+    protocol: TCP
+    name: http
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: evaluation-service-hpa
+  namespace: sadp
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: evaluation-service
+  minReplicas: 2
+  maxReplicas: 8
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80

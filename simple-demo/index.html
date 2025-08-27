@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SADP - Healthcare AI Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        .code-editor { 
+            min-height: 300px; 
+            font-family: 'Monaco', 'Courier New', monospace;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            border-radius: 8px;
+            padding: 16px;
+        }
+    </style>
+</head>
+<body class="bg-gray-50" x-data="sadpPlatform()">
+    <!-- Navigation -->
+    <nav class="gradient-bg text-white shadow-lg">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-6">
+                    <h1 class="text-2xl font-bold">
+                        <i class="fas fa-brain mr-2"></i>SADP Platform
+                    </h1>
+                    <div class="flex space-x-4 text-sm">
+                        <button @click="activeView = 'dashboard'" 
+                                :class="activeView === 'dashboard' ? 'border-b-2 border-white' : ''"
+                                class="pb-1 hover:border-b-2 hover:border-white/50">
+                            <i class="fas fa-tachometer-alt mr-1"></i>Dashboard
+                        </button>
+                        <button @click="activeView = 'agents'" 
+                                :class="activeView === 'agents' ? 'border-b-2 border-white' : ''"
+                                class="pb-1 hover:border-b-2 hover:border-white/50">
+                            <i class="fas fa-robot mr-1"></i>Agents
+                        </button>
+                        <button @click="activeView = 'playground'" 
+                                :class="activeView === 'playground' ? 'border-b-2 border-white' : ''"
+                                class="pb-1 hover:border-b-2 hover:border-white/50">
+                            <i class="fas fa-code mr-1"></i>API Playground
+                        </button>
+                        <button @click="activeView = 'monitoring'" 
+                                :class="activeView === 'monitoring' ? 'border-b-2 border-white' : ''"
+                                class="pb-1 hover:border-b-2 hover:border-white/50">
+                            <i class="fas fa-chart-line mr-1"></i>Monitoring
+                        </button>
+                        <button @click="activeView = 'docs'" 
+                                :class="activeView === 'docs' ? 'border-b-2 border-white' : ''"
+                                class="pb-1 hover:border-b-2 hover:border-white/50">
+                            <i class="fas fa-book mr-1"></i>API Docs
+                        </button>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="flex items-center">
+                        <span class="w-2 h-2 rounded-full mr-2" 
+                              :class="systemStatus.healthy ? 'bg-green-400 pulse' : 'bg-red-400'"></span>
+                        <span x-text="systemStatus.healthy ? 'System Online' : 'System Offline'" class="text-sm"></span>
+                    </span>
+                    <div class="text-sm bg-white/20 px-3 py-1 rounded">
+                        <i class="fas fa-shield-alt mr-1"></i>Secure
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-6 py-8">
+        <!-- Dashboard View -->
+        <div x-show="activeView === 'dashboard'" class="space-y-6">
+            <div class="flex justify-between items-center">
+                <h2 class="text-3xl font-bold">System Dashboard</h2>
+                <button @click="refreshDashboard()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                    <i class="fas fa-sync mr-2" :class="loading ? 'fa-spin' : ''"></i>Refresh
+                </button>
+            </div>
+            
+            <!-- Service Status Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <template x-for="service in services">
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center">
+                                <span class="w-3 h-3 rounded-full mr-3" 
+                                      :class="service.healthy ? 'bg-green-500' : 'bg-red-500'"></span>
+                                <h3 class="font-semibold" x-text="service.name"></h3>
+                            </div>
+                            <i class="fas fa-server text-gray-400"></i>
+                        </div>
+                        <div class="text-sm text-gray-600">
+                            <div>Status: <span x-text="service.healthy ? 'Online' : 'Offline'" 
+                                               :class="service.healthy ? 'text-green-600' : 'text-red-600'"></span></div>
+                            <div>URL: <a :href="service.url" target="_blank" class="text-blue-600 hover:underline text-xs">
+                                <span x-text="service.url"></span>
+                            </a></div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-lg font-semibold mb-4">
+                        <i class="fas fa-rocket mr-2 text-blue-600"></i>Quick Actions
+                    </h3>
+                    <div class="space-y-3">
+                        <button @click="activeView = 'agents'" 
+                                class="w-full text-left p-3 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700">
+                            <i class="fas fa-plus-circle mr-2"></i>Create New Agent
+                        </button>
+                        <button @click="testRandomAgent()" 
+                                class="w-full text-left p-3 rounded-lg bg-green-50 hover:bg-green-100 text-green-700">
+                            <i class="fas fa-play mr-2"></i>Test Agent Execution
+                        </button>
+                        <button @click="activeView = 'playground'" 
+                                class="w-full text-left p-3 rounded-lg bg-purple-50 hover:bg-purple-100 text-purple-700">
+                            <i class="fas fa-code mr-2"></i>Try API Playground
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-lg font-semibold mb-4">
+                        <i class="fas fa-chart-bar mr-2 text-green-600"></i>Recent Activity
+                    </h3>
+                    <div class="space-y-2 text-sm">
+                        <template x-for="activity in recentActivity">
+                            <div class="flex justify-between p-2 border-b">
+                                <span x-text="activity.action"></span>
+                                <span class="text-gray-500" x-text="activity.time"></span>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-lg font-semibold mb-4">
+                        <i class="fas fa-info-circle mr-2 text-indigo-600"></i>Platform Info
+                    </h3>
+                    <div class="space-y-2 text-sm">
+                        <div>Version: <span class="font-mono">v2.0.0</span></div>
+                        <div>Environment: <span class="font-mono">Production</span></div>
+                        <div>Region: <span class="font-mono">us-central1</span></div>
+                        <div>Uptime: <span class="font-mono text-green-600">99.9%</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Agent Management View -->
+        <div x-show="activeView === 'agents'" class="space-y-6">
+            <div class="flex justify-between items-center">
+                <h2 class="text-3xl font-bold">Healthcare AI Agents</h2>
+                <button @click="showCreateForm = true" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
+                    <i class="fas fa-plus mr-2"></i>Create Agent
+                </button>
+            </div>
+
+            <!-- Agent Types Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                <template x-for="agent in availableAgents">
+                    <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition cursor-pointer"
+                         @click="selectAgent(agent)">
+                        <div class="text-center">
+                            <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 
+                                      flex items-center justify-center text-white text-2xl">
+                                <i :class="agent.icon"></i>
+                            </div>
+                            <h3 class="font-semibold text-lg mb-2" x-text="agent.name"></h3>
+                            <p class="text-gray-600 text-sm mb-4" x-text="agent.description"></p>
+                            <div class="flex justify-center space-x-2">
+                                <button @click.stop="executeAgent(agent)" 
+                                        class="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700">
+                                    Execute
+                                </button>
+                                <button @click.stop="showAgentDetails(agent)" 
+                                        class="px-3 py-1 bg-gray-600 text-white text-xs rounded hover:bg-gray-700">
+                                    Details
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <!-- API Playground View -->
+        <div x-show="activeView === 'playground'" class="space-y-6">
+            <div class="flex justify-between items-center">
+                <h2 class="text-3xl font-bold">API Playground</h2>
+                <div class="flex space-x-2">
+                    <select x-model="selectedEndpoint" class="border rounded px-3 py-2">
+                        <option value="/health">Health Check</option>
+                        <option value="/agents/execute">Execute Agent</option>
+                        <option value="/evaluate">Start Evaluation</option>
+                        <option value="/templates">List Templates</option>
+                        <option value="/metrics">Get Metrics</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Request Panel -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-lg font-semibold mb-4">Request</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Method & URL</label>
+                            <div class="flex">
+                                <select x-model="requestMethod" class="border rounded-l px-3 py-2 bg-gray-100">
+                                    <option>GET</option>
+                                    <option>POST</option>
+                                </select>
+                                <input x-model="requestUrl" class="flex-1 border-t border-b border-r rounded-r px-3 py-2"
+                                       placeholder="API endpoint">
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Request Body (JSON)</label>
+                            <textarea x-model="requestBody" 
+                                      class="w-full h-32 border rounded px-3 py-2 font-mono text-sm"
+                                      placeholder='{"key": "value"}'></textarea>
+                        </div>
+                        
+                        <button @click="sendApiRequest()" 
+                                class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
+                                :disabled="loading">
+                            <i class="fas fa-paper-plane mr-2" :class="loading ? 'fa-spin' : ''"></i>
+                            <span x-text="loading ? 'Sending...' : 'Send Request'"></span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Response Panel -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-lg font-semibold mb-4">Response</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Status</label>
+                            <div class="flex items-center space-x-2">
+                                <span class="px-2 py-1 rounded text-xs font-mono"
+                                      :class="responseStatus >= 200 && responseStatus < 300 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
+                                      x-text="responseStatus || 'Not sent'"></span>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Response Body</label>
+                            <pre class="code-editor overflow-auto" x-text="responseBody || 'No response yet'"></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monitoring View -->
+        <div x-show="activeView === 'monitoring'" class="space-y-6">
+            <h2 class="text-3xl font-bold">System Monitoring</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="text-3xl font-bold text-blue-600" x-text="metrics.requests || 0"></div>
+                            <p class="text-gray-600">Total Requests</p>
+                        </div>
+                        <i class="fas fa-chart-line text-3xl text-blue-200"></i>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="text-3xl font-bold text-green-600" x-text="metrics.successRate || '99.9%'"></div>
+                            <p class="text-gray-600">Success Rate</p>
+                        </div>
+                        <i class="fas fa-check-circle text-3xl text-green-200"></i>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="text-3xl font-bold text-purple-600" x-text="metrics.avgResponseTime || '245ms'"></div>
+                            <p class="text-gray-600">Avg Response</p>
+                        </div>
+                        <i class="fas fa-clock text-3xl text-purple-200"></i>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="text-3xl font-bold text-orange-600" x-text="metrics.activeAgents || 8"></div>
+                            <p class="text-gray-600">Active Agents</p>
+                        </div>
+                        <i class="fas fa-robot text-3xl text-orange-200"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Logs -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h3 class="text-lg font-semibold mb-4">Recent System Logs</h3>
+                <div class="space-y-2 max-h-64 overflow-auto">
+                    <template x-for="log in systemLogs">
+                        <div class="flex items-center justify-between p-2 border-b text-sm">
+                            <div class="flex items-center space-x-3">
+                                <span class="w-2 h-2 rounded-full" 
+                                      :class="log.level === 'info' ? 'bg-blue-500' : log.level === 'warning' ? 'bg-yellow-500' : 'bg-red-500'"></span>
+                                <span x-text="log.message"></span>
+                            </div>
+                            <span class="text-gray-500" x-text="log.timestamp"></span>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+
+        <!-- API Documentation View -->
+        <div x-show="activeView === 'docs'" class="space-y-6">
+            <h2 class="text-3xl font-bold">API Documentation</h2>
+            
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h3 class="text-lg font-semibold mb-4">Service Endpoints</h3>
+                <div class="space-y-4">
+                    <template x-for="service in services">
+                        <div class="border rounded-lg p-4">
+                            <div class="flex justify-between items-center mb-2">
+                                <h4 class="font-medium" x-text="service.name"></h4>
+                                <span class="px-2 py-1 bg-gray-100 rounded text-xs font-mono" x-text="service.status"></span>
+                            </div>
+                            <p class="text-sm text-gray-600 mb-3" x-text="service.description"></p>
+                            <div class="flex space-x-2">
+                                <a :href="service.docsUrl" target="_blank" 
+                                   class="text-blue-600 hover:underline text-sm">
+                                    <i class="fas fa-external-link-alt mr-1"></i>API Docs
+                                </a>
+                                <a :href="service.url + '/health'" target="_blank" 
+                                   class="text-green-600 hover:underline text-sm">
+                                    <i class="fas fa-heart mr-1"></i>Health Check
+                                </a>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function sadpPlatform() {
+            return {
+                activeView: 'dashboard',
+                loading: false,
+                systemStatus: { healthy: true },
+                selectedEndpoint: '/health',
+                requestMethod: 'GET',
+                requestUrl: 'https://sadp-agent-runtime-355881591332.us-central1.run.app/health',
+                requestBody: '{}',
+                responseStatus: null,
+                responseBody: '',
+                
+                services: [
+                    {
+                        name: 'Agent Runtime',
+                        url: 'https://sadp-agent-runtime-355881591332.us-central1.run.app',
+                        docsUrl: 'https://sadp-agent-runtime-355881591332.us-central1.run.app/docs',
+                        healthy: true,
+                        status: 'Online',
+                        description: 'Main agent execution and management service'
+                    },
+                    {
+                        name: 'Evaluation',
+                        url: 'https://evaluation-service-355881591332.us-central1.run.app',
+                        docsUrl: 'https://evaluation-service-355881591332.us-central1.run.app/docs',
+                        healthy: true,
+                        status: 'Online',
+                        description: 'Agent performance evaluation and testing'
+                    },
+                    {
+                        name: 'Development',
+                        url: 'https://development-service-355881591332.us-central1.run.app',
+                        docsUrl: 'https://development-service-355881591332.us-central1.run.app/docs',
+                        healthy: true,
+                        status: 'Online',
+                        description: 'Agent template and build management'
+                    },
+                    {
+                        name: 'Monitoring',
+                        url: 'https://monitoring-service-355881591332.us-central1.run.app',
+                        docsUrl: 'https://monitoring-service-355881591332.us-central1.run.app/docs',
+                        healthy: true,
+                        status: 'Online',
+                        description: 'System metrics and performance monitoring'
+                    }
+                ],
+
+                availableAgents: [
+                    { name: 'Clinical Agent', icon: 'fas fa-stethoscope', description: 'Clinical decision support and diagnosis assistance' },
+                    { name: 'Document Processor', icon: 'fas fa-file-medical', description: 'Medical document analysis and extraction' },
+                    { name: 'Billing Agent', icon: 'fas fa-receipt', description: 'Healthcare billing and coding automation' },
+                    { name: 'Voice Agent', icon: 'fas fa-microphone', description: 'Voice-to-text medical transcription' },
+                    { name: 'Health Assistant', icon: 'fas fa-robot', description: 'AI-powered health information chatbot' },
+                    { name: 'Medication Entry', icon: 'fas fa-pills', description: 'Smart medication management and entry' },
+                    { name: 'Lab Results', icon: 'fas fa-vial', description: 'Laboratory result processing and analysis' },
+                    { name: 'Referral Processor', icon: 'fas fa-share-alt', description: 'Medical referral document processing' }
+                ],
+
+                metrics: {
+                    requests: 12847,
+                    successRate: '99.7%',
+                    avgResponseTime: '245ms',
+                    activeAgents: 8
+                },
+
+                recentActivity: [
+                    { action: 'Agent executed: Clinical Agent', time: '2 min ago' },
+                    { action: 'New evaluation completed', time: '5 min ago' },
+                    { action: 'Template updated: Billing Agent', time: '12 min ago' },
+                    { action: 'System health check passed', time: '15 min ago' }
+                ],
+
+                systemLogs: [
+                    { level: 'info', message: 'Agent runtime service started successfully', timestamp: '10:32 AM' },
+                    { level: 'info', message: 'Evaluation service health check passed', timestamp: '10:31 AM' },
+                    { level: 'warning', message: 'High memory usage detected on node-1', timestamp: '10:30 AM' },
+                    { level: 'info', message: 'New template deployed: Clinical Agent v2.1', timestamp: '10:28 AM' }
+                ],
+
+                init() {
+                    this.checkSystemHealth();
+                    setInterval(() => this.checkSystemHealth(), 30000);
+                },
+
+                async checkSystemHealth() {
+                    try {
+                        const response = await fetch('https://sadp-agent-runtime-355881591332.us-central1.run.app/health');
+                        this.systemStatus.healthy = response.ok;
+                    } catch (error) {
+                        this.systemStatus.healthy = false;
+                    }
+                },
+
+                async refreshDashboard() {
+                    this.loading = true;
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    await this.checkSystemHealth();
+                    this.loading = false;
+                },
+
+                async sendApiRequest() {
+                    this.loading = true;
+                    try {
+                        const options = {
+                            method: this.requestMethod,
+                            headers: { 'Content-Type': 'application/json' }
+                        };
+                        
+                        if (this.requestMethod === 'POST' && this.requestBody.trim()) {
+                            options.body = this.requestBody;
+                        }
+
+                        const response = await fetch(this.requestUrl, options);
+                        this.responseStatus = response.status;
+                        
+                        const text = await response.text();
+                        try {
+                            this.responseBody = JSON.stringify(JSON.parse(text), null, 2);
+                        } catch {
+                            this.responseBody = text;
+                        }
+                    } catch (error) {
+                        this.responseStatus = 'Error';
+                        this.responseBody = error.message;
+                    }
+                    this.loading = false;
+                },
+
+                executeAgent(agent) {
+                    alert(`Executing ${agent.name}...`);
+                },
+
+                testRandomAgent() {
+                    const agent = this.availableAgents[Math.floor(Math.random() * this.availableAgents.length)];
+                    this.executeAgent(agent);
+                }
+            }
+        }
+    </script>
+</body>
+</html>
